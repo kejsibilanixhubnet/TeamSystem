@@ -1,0 +1,143 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <title>Title</title>
+<head>
+    
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contoso Task Pane Add-in</title>
+    <script src="taskpane.ts"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="module" src="https://unpkg.com/@fluentui/web-components"></script>
+    <script type="module" src="https://unpkg.com/@fluentui/web-components@2.0.0"></script>
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+        <img width="90" height="90" src="../../assets/TeamSystemAddInLogo.png" alt="Contoso" title="Contoso" id="addInLogo"/>
+
+
+    <!--Insert Token-->
+    <div id="TokenRequired" class="ms-welcome__main" style="display: none;">
+    <fluent-text-field appearance="outline" type="text" id="token" >Scrivi il token :</fluent-text-field>
+    <br/>
+    <fluent-button appearance="stealth" type="button" id="SaveToken" title="Save Token" value="Save Token">Save Token</fluent-button>
+    <fluent-text-field type="text" appearance="outline" style="color: red;display: none;" id="Messagio" value="Il token e valido chiudi e apri di nuovo">Il token e valido chiudi e apri di nuovo</fluent-text-field>
+    </div>
+
+    <!--Loader-->
+    <div class="startingLoader" id="startingLoader"></div>
+    <div id="error"></div>
+
+    <!--Choose practice section-->
+    <div id="practicesSection" class="ms-welcome__main search" style="display: none;">
+        <fluent-button appearance="stealth" id="choosePracticeButton" class="ms-Button-label">Cerca Pratiche</fluent-button>
+        <div class="startingLoader" id="practicesLoader"></div>
+        <br/>
+        <div id="practices" style="margin: auto"></div>
+        <br/>
+        <div id="navigationButtons">
+        <fluent-button appearance="stealth" id="prevPageOfPractices" class="button prev" disabled><</fluent-button>
+        <fluent-button appearance="stealth" id="nextPageOfPractices" class="button next">></fluent-button>
+        </div>
+        </div>
+    </div>
+
+    <!--Choose template section-->
+    <div id="templateChooser" class="ms-welcome__main" style="display: none;">
+        <div id="displayChosenPracticeTemplate"></div>
+        <br/>
+        <label class="ms-font-m"> Scegli Template </label>
+        <br/>
+        <fluent-select id="selectTemplate" title="Cerca Template">
+            <fluent-option></fluent-option>
+        </fluent-select>
+    </div>
+
+      
+
+    <!--Choose documents section-->
+    <div id="documentChooser" class="ms-welcome__main" style="display: none;">
+        <div id="displayChosenPracticeDocument"></div>
+        <br/>
+        <label class="ms-font-m"> Cerca Documenti </label>
+        <br/>
+        <fluent-text-field appearance="outline" id="myInput"></fluent-text-field>
+        <br/>
+        <div>
+            <fluent-tree-view id="documents">
+            </fluent-tree-view>
+        </div>
+        <br/>
+        <fluent-button id="addDocument" appearance="stealth">
+            <span>Allega</span>
+        </fluent-button>
+
+    </div>
+
+
+    <!--Chosen practice section-->
+    <div class="ms-welcome__main" style="display: none;" id="selectedPractices">
+    </div>
+
+    <!--Practice information popup-->
+    <div class="modal" id="myForm">
+        <div class="modal-content">
+            <h1>Dettagli Pratica</h1>
+          <label for="email"><b>ID:</b></label>
+          <fluent-text-field type="text" title="" id="IDForm" disabled required></fluent-text-field><br><br>
+          <label for="Avvocato"><b>Avvocato</b></label>
+          <fluent-text-field type="text"  id="AvvocatoForm" disabled required></fluent-text-field><br><br>
+          <label for="Ruologenerale"><b>Ruolo generale</b></label>
+          <fluent-text-field type="text"  id="RuologeneraleForm" disabled required></fluent-text-field><br><br>
+          <label for="Data"><b>Data</b></label>
+          <fluent-text-field type="text"  id="DataForm" disabled required></fluent-text-field><br><br>
+          <label for="Codicearchivio"><b>Codice archivio</b></label>
+          <fluent-text-field type="text"  id="CodicearchivioForm" disabled required></fluent-text-field><br><br>
+          <label for="Descrizione"><b>Descrizione</b></label>
+          <fluent-text-field type="text"  id="DescrizioneForm" disabled required></fluent-text-field><br><br>
+          <label for="Stato"><b>Stato</b></label>
+          <fluent-text-field type="text"  id="StatoForm" disabled required></fluent-text-field><br><br>
+          <fluent-button type="button" class="btn cancel" id="CloseForm">Close</fluent-button>
+        </div>
+      </div>
+
+    <!--Search practice section-->
+    <div id="searchPractices" class="ms-welcome__main" style="display: none;">
+        <fluent-button appearance="stealth" value="" id="goBackToSelectPractice" class="button back"><</fluent-button>
+
+        <div id="searchPracticeForm">
+        <form id="searchPracticeForm_form" class="searchMethodForm" onsubmit="return false">
+            <fluent-text-field appearance="outline" id="ricerca_testo">Ricerca per (codicearchivio, descrizione, oggetto, denominazione soggetto/i)</fluent-text-field>
+            <br/>
+            <label class="ms-font-m">Utente</label>
+            <fluent-select title="Scegli utente" id="userList"></fluent-select>
+            <br/>
+            <label class="ms-font-m">Dal</label>
+            <input type="date" id="beginDate">
+            <label class="ms-font-m">Al</label>
+            <input type="date" id="endDate">
+            <br/>
+            <fluent-button appearance="stealth" type="submit" value="Cerca" id="submitPracticeSearch" class="button">Cerca</fluent-button>
+        </form>
+    </div>
+    </div>
+    
+    <!--Search gave no results-->
+    <div id="searchNoResults" style="display: none">0 resultati</div>
+
+</body>
+
+</html>
