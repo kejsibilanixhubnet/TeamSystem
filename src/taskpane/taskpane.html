@@ -42,7 +42,7 @@
     <div id="error"></div>
 
     <!--Choose practice section-->
-    <div id="practicesSection" class="ms-welcome__main search" style="display: none;">
+    <div id="practicesSection" class="ms-welcome__main" style="display: none;">
         <fluent-button appearance="stealth" id="choosePracticeButton" class="ms-Button-label">Cerca Pratiche</fluent-button>
         <div class="startingLoader" id="practicesLoader"></div>
         <br/>
@@ -51,7 +51,6 @@
         <div id="navigationButtons">
         <fluent-button appearance="stealth" id="prevPageOfPractices" class="button prev" disabled><</fluent-button>
         <fluent-button appearance="stealth" id="nextPageOfPractices" class="button next">></fluent-button>
-        </div>
         </div>
     </div>
 
@@ -112,10 +111,10 @@
           <fluent-text-field type="text"  id="StatoForm" disabled required></fluent-text-field><br><br>
           <fluent-button type="button" class="btn cancel" id="CloseForm">Close</fluent-button>
         </div>
-      </div>
+    </div>
 
     <!--Search practice section-->
-    <div id="searchPractices" class="ms-welcome__main" style="display: none;">
+    <div id="searchPractices" class="ms-welcome__main search" style="display: none;">
         <fluent-button appearance="stealth" value="" id="goBackToSelectPractice" class="button back"><</fluent-button>
 
         <div id="searchPracticeForm">
@@ -135,6 +134,19 @@
     </div>
     </div>
     
+
+    <!--Choose between template or documents-->
+    <div id="chooseTemplateOrDocs" style="display: none">
+        <fluent-button appearance="stealth" id="goBackToPractice_ChosenPractice"><</fluent-button>
+        <br>
+        <div>
+        <fluent-button appearance="stealth" id="chooseTemplate">Scegli Template</fluent-button>
+        <br/>
+        <fluent-button appearance="stealth" id="chooseDocuments">Aggiungi Documenti</fluent-button>
+        </div>
+    </div>
+
+
     <!--Search gave no results-->
     <div id="searchNoResults" style="display: none">0 resultati</div>
 

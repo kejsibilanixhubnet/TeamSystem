@@ -34,6 +34,7 @@ var token = "";
 var chosenPractice = "";
 var indexOfPractice = 0;
 var totalNumberOfPractices = 0;
+var searchedForPractice = false;
 
 //initialize
 Office.onReady((info) => {
@@ -121,8 +122,7 @@ export function SaveToken() {
     },
   });
   Office.context.roamingSettings.saveAsync(function (result) {
-    if (result.status !== Office.AsyncResultStatus.Succeeded) {
-    } else {
+    if (result.status !== Office.AsyncResultStatus.Succeeded) {} else {
       document.getElementById("TokenRequired").style.display = "none";
       Office.onReady();
     }
@@ -174,7 +174,7 @@ export async function GetAllPratiche(token) {
         if (Office.context.mailbox.item.displayReplyForm != undefined) {
           //--------------------------------------------------------------------------------------------------------------------------------------------> Here here - received mail
         } else {
-          chooseTemplate(chosenPractice); //------------------------------------------------------------------------------------------------------------> Here here - new mail
+          chooseTemplateOrDocuments(); //------------------------------------------------------------------------------------------------------------> Here here - new mail
         }
       };
       var Dettagli = document.getElementById("Dettagli" + item.id);
@@ -233,6 +233,7 @@ export async function goToPreviousPage() {
 
 //search for practice section
 export async function searchForPractice() {
+  searchedForPractice = true;
   //get all users
   var settings = {
     url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/user",
@@ -312,7 +313,7 @@ export async function searchForPractice() {
           if (Office.context.mailbox.item.displayReplyForm != undefined) {
             //------------------------------------------------------------------------------------------------------------------------------------------> Here here - received mail
           } else {
-            chooseTemplate(chosenPractice); //----------------------------------------------------------------------------------------------------------> Here here - new mail
+            chooseTemplateOrDocuments(); //----------------------------------------------------------------------------------------------------------> Here here - new mail
           }
         };
         var Dettagli = document.getElementById("DettagliSearch" + item.id);
@@ -369,12 +370,35 @@ export async function chooseTemplate(id) {
       document.getElementById("selectTemplate").append(option);
     });
   });
-  chooseDocument(chosenPractice);
+  // chooseDocument(chosenPractice);
+  document.getElementById("chooseTemplateOrDocs").style.display = "none";
   document.getElementById("searchPractices").style.display = "none";
   document.getElementById("templateChooser").style.display = "flex";
-  document.getElementById("documentChooser").style.display = "flex";
+  // document.getElementById("documentChooser").style.display = "flex";
   document.getElementById("selectTemplate").onchange = addTemplate;
   return false;
+}
+
+//choose between template or documents
+export async function chooseTemplateOrDocuments() {
+  document.getElementById("practicesSection").style.display = "none";
+  document.getElementById("selectedPractices").style.display = "none";
+  document.getElementById("chooseTemplateOrDocs").style.display = "";
+  document.getElementById("goBackToPractice_ChosenPractice").onclick = function () {
+    if (searchedForPractice == true) {
+      document.getElementById("selectedPractices").style.display = "";
+      document.getElementById("chooseTemplateOrDocs").style.display = "none";
+    } else {
+      document.getElementById("practicesSection").style.display = "";
+      document.getElementById("chooseTemplateOrDocs").style.display = "none";
+    }
+  };
+  document.getElementById("chooseTemplate").onclick = function () {
+    chooseTemplate(26);
+  };
+  document.getElementById("chooseDocuments").onclick = function () {
+    chooseDocument(chosenPractice);
+  };
 }
 
 //add selected template
@@ -457,9 +481,9 @@ export async function chooseDocument(id) {
     });
   });
 
+  document.getElementById("chooseTemplateOrDocs").style.display = "none";
   document.getElementById("myInput").onkeyup = filter;
   document.getElementById("addDocument").onclick = addDocument;
-
   return false;
 }
 
