@@ -56,27 +56,30 @@
 
     <!--Choose template section-->
     <div id="templateChooser" class="ms-welcome__main" style="display: none;">
-        <div id="displayChosenPracticeTemplate"></div>
+        <!-- <div id="displayChosenPracticeTemplate"></div> -->
+        <fluent-button id="goBackToTempDocChoiceTemp"><</fluent-button>
         <br/>
-        <label class="ms-font-m"> Scegli Template </label>
+        <label class="ms-font-m">Scegli Template</label>
         <br/>
         <fluent-select id="selectTemplate" title="Cerca Template">
-            <fluent-option></fluent-option>
         </fluent-select>
+        <br/>
+        <fluent-button id="addTemplate">Aggiungi</fluent-button>
     </div>
 
       
 
     <!--Choose documents section-->
     <div id="documentChooser" class="ms-welcome__main" style="display: none;">
-        <div id="displayChosenPracticeDocument"></div>
+        <fluent-button id="goBackToTempDocChoiceDoc"><</fluent-button>
         <br/>
-        <label class="ms-font-m"> Cerca Documenti </label>
+        <label class="ms-font-m">Cerca Documenti</label>
         <br/>
         <fluent-text-field appearance="outline" id="myInput"></fluent-text-field>
         <br/>
         <div>
             <fluent-tree-view id="documents">
+                <i class="fa-solid fa-folder"></i><fluent-tree-item slot="expand-collapse-glyph">TEST</fluent-tree-item>
             </fluent-tree-view>
         </div>
         <br/>
@@ -89,6 +92,8 @@
 
     <!--Chosen practice section-->
     <div class="ms-welcome__main" style="display: none;" id="selectedPractices">
+    <fluent-button id="goBackToSearch" class="button prev" appearance="stealth"><</fluent-button>
+    <br/>
     </div>
 
     <!--Practice information popup-->
@@ -122,7 +127,8 @@
             <fluent-text-field appearance="outline" id="ricerca_testo">Ricerca per (codicearchivio, descrizione, oggetto, denominazione soggetto/i)</fluent-text-field>
             <br/>
             <label class="ms-font-m">Utente</label>
-            <fluent-select title="Scegli utente" id="userList"></fluent-select>
+            <fluent-combobox title="Scegli utente" id="userList" autocomplete="both">
+            </fluent-combobox>
             <br/>
             <label class="ms-font-m">Dal</label>
             <input type="date" id="beginDate">
@@ -136,7 +142,7 @@
     
 
     <!--Choose between template or documents-->
-    <div id="chooseTemplateOrDocs" style="display: none">
+    <div id="chooseTemplateOrDocs" class="ms-welcome__main" style="display: none">
         <fluent-button appearance="stealth" id="goBackToPractice_ChosenPractice"><</fluent-button>
         <br>
         <div>

@@ -122,7 +122,8 @@ export function SaveToken() {
     },
   });
   Office.context.roamingSettings.saveAsync(function (result) {
-    if (result.status !== Office.AsyncResultStatus.Succeeded) {} else {
+    if (result.status !== Office.AsyncResultStatus.Succeeded) {
+    } else {
       document.getElementById("TokenRequired").style.display = "none";
       Office.onReady();
     }
@@ -233,6 +234,8 @@ export async function goToPreviousPage() {
 
 //search for practice section
 export async function searchForPractice() {
+  document.getElementById("selectedPractices").style.display = "none";
+  document.getElementById("searchNoResults").style.display = "none";
   searchedForPractice = true;
   //get all users
   var settings = {
@@ -246,7 +249,7 @@ export async function searchForPractice() {
 
   await $.ajax(settings).done(function (response) {
     var users = response.payload;
-    users.forEach((user) => {
+    users.sort().forEach((user) => {
       var option = document.createElement("fluent-option");
       option.setAttribute("id", user.id);
       option.setAttribute("value", user.id);
@@ -266,12 +269,37 @@ export async function searchForPractice() {
 
   //search for practice by set parameters
   document.getElementById("submitPracticeSearch").onclick = async function getPractices() {
+    debugger;
+    var paramString;
     var userId = document
       .querySelector('fluent-option[aria-selected="true"]')
       .getAttribute("id")
       .replace("option-", "");
     var searchBy = document.getElementById("ricerca_testo")["value"];
-    var paramString = "?ricerca_testo=" + searchBy + "&id_utente_soggetto=" + userId;
+    var beginDate = document.getElementById("beginDate")["value"];
+    var endDate = document.getElementById("endDate")["value"];
+
+    var searchByString = "ricerca_testo=" + searchBy;
+    var userIdString = "id_utente_soggetto=" + userId;
+    var beginDateString = "data_dal" + beginDate + " 00:00:00";
+    var endDateString = "data_al" + endDate + " 00:00:00";
+    if (beginDate == null || beginDate == "") {
+      beginDateString = "";
+    }
+
+    if (endDate == null || endDate == "") {
+      endDateString = "";
+    }
+
+    if (searchBy == null || searchBy == "") {
+      searchByString = "";
+    }
+
+    if (userId == null || userId == "") {
+      userIdString = "";
+    }
+    //paramString
+    paramString = "?" + searchByString + "&" + userIdString + "&" + beginDateString + "&" + endDateString;
     var settings = {
       url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/archive" + paramString,
       method: "GET",
@@ -313,7 +341,7 @@ export async function searchForPractice() {
           if (Office.context.mailbox.item.displayReplyForm != undefined) {
             //------------------------------------------------------------------------------------------------------------------------------------------> Here here - received mail
           } else {
-            chooseTemplateOrDocuments(); //----------------------------------------------------------------------------------------------------------> Here here - new mail
+            chooseTemplateOrDocuments(); //-------------------------------------------------------------------------------------------------------------> Here here - new mail
           }
         };
         var Dettagli = document.getElementById("DettagliSearch" + item.id);
@@ -337,6 +365,7 @@ export async function searchForPractice() {
         };
       });
     });
+    document.getElementById("goBackToSearch").onclick = searchForPractice;
     document.getElementById("selectedPractices").style.display = "flex";
     document.getElementById("searchPractices").style.display = "none";
   };
@@ -375,12 +404,17 @@ export async function chooseTemplate(id) {
   document.getElementById("searchPractices").style.display = "none";
   document.getElementById("templateChooser").style.display = "flex";
   // document.getElementById("documentChooser").style.display = "flex";
-  document.getElementById("selectTemplate").onchange = addTemplate;
+  document.getElementById("addTemplate").onclick = addTemplate;
+  document.getElementById("goBackToTempDocChoiceTemp").onclick = chooseTemplateOrDocuments;
   return false;
 }
 
 //choose between template or documents
 export async function chooseTemplateOrDocuments() {
+  document.getElementById("documents").innerHTML = "";
+  document.getElementById("selectTemplate").innerHTML = "";
+  document.getElementById("templateChooser").style.display = "none";
+  document.getElementById("documentChooser").style.display = "none";
   document.getElementById("practicesSection").style.display = "none";
   document.getElementById("selectedPractices").style.display = "none";
   document.getElementById("chooseTemplateOrDocs").style.display = "";
@@ -430,6 +464,7 @@ export async function addTemplate() {
 
 //documents section
 export async function chooseDocument(id) {
+  document.getElementById("chooseTemplateOrDocs").style.display = "none";
   // document.getElementById("displayChosenPracticeDocument").innerText = "Practice Id = " + id;
   document.getElementById("documentChooser").style.display = "flex";
   //setting id=2 static for testing
@@ -444,7 +479,7 @@ export async function chooseDocument(id) {
       Authorization: "Bearer " + token,
     },
   };
-
+  document.getElementById("goBackToTempDocChoiceDoc").onclick = chooseTemplateOrDocuments;
   //create tree-view from documentTreeView request
   var elementId;
   document.getElementById("templateChooser").style.display = "none";
@@ -480,8 +515,6 @@ export async function chooseDocument(id) {
       document.getElementById("documents").append(parent);
     });
   });
-
-  document.getElementById("chooseTemplateOrDocs").style.display = "none";
   document.getElementById("myInput").onkeyup = filter;
   document.getElementById("addDocument").onclick = addDocument;
   return false;
@@ -510,6 +543,7 @@ export function filter() {
 
 //add selected documents
 export function addDocument() {
+  debugger;
   var allDocs = document.querySelectorAll("div#documentChooser fluent-checkbox");
   allDocs.forEach((doc) => {
     if (doc.getAttribute("current-checked") == "true") {
