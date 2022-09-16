@@ -26,25 +26,35 @@ provideFluentDesignSystem().register(
   fluentButton(),
   fluentTextField()
 );
-//
 import { creds } from "./creds";
-
+import jwt_decode from "jwt-decode";
 //authorization token
 var token = "";
 var chosenPractice = "";
 var indexOfPractice = 0;
 var totalNumberOfPractices = 0;
 var searchedForPractice = false;
+var data = "";
+var codicepratica = "";
 
 //initialize
 Office.onReady((info) => {
   if (info.host === Office.HostType.Outlook) {
+    debugger;
+    // getUserData();
+    Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+      debugger;
+      const accessToken = result.value;
+
+      // Use the access token.
+    });
     document.getElementById("CloseForm").onclick = CloseForm;
     var ClientSecretKey = Office.context.roamingSettings.get("ClientSecretKey");
     if (ClientSecretKey != undefined) {
       document.getElementById("choosePracticeButton").onclick = searchForPractice;
       document.getElementById("nextPageOfPractices").onclick = goToNextPage;
       document.getElementById("prevPageOfPractices").onclick = goToPreviousPage;
+      document.getElementById("FascicoloAllegati").onclick = FascicoloAllegati;
 
       $.ajax({
         url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/oauth/token",
@@ -92,14 +102,145 @@ Office.onReady((info) => {
     }
   }
 });
+// async function getUserData() {
+//   debugger;
+
+//   let userTokenEncoded = await OfficeRuntime.auth
+//     .getAccessToken({
+//       allowSignInPrompt: true,
+//       forMSGraphAccess: true,
+//     })
+//     .then((token: any) => {
+//       debugger;
+//       console.log("bbbbbbbbbbbbbb");
+//       var tokeni = token;
+//       var url =
+//         "https://graph.microsoft.com/v1.0/me/messages/AQMkAGRmMjc1MDFlLWY4NWItNGMxYS04Yjk1LTRhMjAyM2Q4MmI1MQBGAAADq6f5QYdXIUa38XX8J1ml3wcAMB8YFZIaAUucR37vvHv5-wAAAgEMAAAAMB8YFZIaAUucR37vvHv5-wAFSCGhegAAAA==";
+//       var settings = {
+//         url: "https://howling-crypt-47129.herokuapp.com/https://graph.microsoft.com/v1.0/me",
+//         method: "GET",
+//         timeout: 0,
+//         headers: {
+//           Authorization: "Bearer " + tokeni,
+//           contentType: "application/x-www-form-urlencoded",
+//         },
+//         data: {
+//           scope: "https://graph.microsoft.com/.default",
+//         },
+//       };
+
+//       $.ajax(settings)
+//         .done(function (response) {
+//           debugger;
+//           var test = response;
+//         })
+//         .catch((error: any) => {
+//           debugger;
+//           var error = error;
+//         });
+//     })
+//     .catch((error: any) => {
+//       debugger;
+//       console.log("cccccccccccccccccc");
+//     });
+// }
 
 //close form
 export function CloseForm() {
   document.getElementById("myForm").style.display = "none";
 }
 
+export function FascicoloAllegati() {
+  debugger;
+  document.getElementById("FascicoloAllegati").style.display = "none";
+  for (let i = 0; i < Office.context.mailbox.item.attachments.length; i++) {
+    var AllegatiFascicolo = document.createElement("div");
+    AllegatiFascicolo.setAttribute("id", Office.context.mailbox.item.attachments[i].id);
+    var obj = Office.context.mailbox.item.attachments[i].name.split(".");
+    AllegatiFascicolo.innerHTML =
+      `<div class="Allegati">
+  <input type="text" id="IdA` +
+      i +
+      `" value=` +
+      obj[0] +
+      `><textbox disabled id="Id1` +
+      i +
+      `">` +
+      "." +
+      obj[1] +
+      `</textbox><br><button id=` +
+      "Allegati" +
+      Office.context.mailbox.item.attachments[i].id +
+      `>Fascicolo Allegati</button></div><br/>`;
+    document.getElementById("ReadMessage").append(AllegatiFascicolo);
+    var FascicoloAllegati = document.getElementById("Allegati" + Office.context.mailbox.item.attachments[i].id);
+    FascicoloAllegati.onclick = function setChoosenPractice() {
+      debugger;
+      //  var test=document.getElementById("Id" + Office.context.mailbox.item.attachments[i].id).value;
+      // var test= document.getElementById("Id" + Office.context.mailbox.item.attachments[i].id).innerText;
+      var NameOfFile = $("#IdA" + i).val();
+      var FullNameOfFile = NameOfFile + "." + Office.context.mailbox.item.attachments[i].name.split(".")[1];
+      var options = { asyncContext: { type: Office.context.mailbox.item.attachments[i].attachmentType } };
+      Office.context.mailbox.item.getAttachmentContentAsync(
+        Office.context.mailbox.item.attachments[i].id,
+        options,
+        function (result) {
+          if (result.status == Office.AsyncResultStatus.Succeeded) {
+            debugger;
+            var AttachmentContent = result.value;
+            var ContentType = Office.context.mailbox.item.attachments[i].contentType;
+            const url = "data:" + ContentType + ";" + "base64," + AttachmentContent.content;
+            fetch(url)
+              .then((res) => res.blob())
+              .then((blob) => {
+                debugger;
+                const file = new File([blob], FullNameOfFile, { type: ContentType });
+                console.log(file);
+                let data = new FormData();
+                data.append("file", file);
+                data.append("titolodocumento", NameOfFile.toString());
+                data.append("nomefile", FullNameOfFile.toString());
+                data.append("data", "2020-01-01");
+                data.append("codicepratica", codicepratica);
+
+                fetch("https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/document", {
+                  method: "POST",
+                  body: data,
+                  headers: {
+                    Authorization: "Bearer " + token,
+                  },
+                })
+                  .then(function (serverPromise) {
+                    debugger;
+                    serverPromise
+                      .json()
+                      .then(function (j) {
+                        // console.log(j);
+                        document.getElementById("IdA" + i).style.display = "none";
+                        document.getElementById("Id1" + i).style.display = "none";
+                        document.getElementById(
+                          "Allegati" + Office.context.mailbox.item.attachments[i].id
+                        ).style.display = "none";
+                      })
+                      .catch(function (e) {
+                        console.log(e);
+                      });
+                  })
+                  .catch(function (e) {
+                    debugger;
+                    console.log(e);
+                  });
+              });
+          }
+        }
+      );
+    };
+  }
+}
+
 //save token
 export function SaveToken() {
+  debugger;
   var Token = $("#token").val();
   Office.context.roamingSettings.set("ClientSecretKey", Token);
   $.ajax({
@@ -113,10 +254,11 @@ export function SaveToken() {
 
     success: function () {
       document.getElementById("Messagio").style.display = "";
+      document.getElementById("SaveToken").style.display = "none";
+      document.getElementById("token").style.display = "none";
     },
     error: function () {
       document.getElementById("SaveToken").onclick = SaveToken;
-
       document.getElementById("TokenRequired").style.display = "";
       document.getElementById("startingLoader").style.display = "none";
     },
@@ -125,6 +267,9 @@ export function SaveToken() {
     if (result.status !== Office.AsyncResultStatus.Succeeded) {
     } else {
       document.getElementById("TokenRequired").style.display = "none";
+      document.getElementById("Messagio").style.display = "";
+      document.getElementById("SaveToken").style.display = "none";
+      document.getElementById("token").style.display = "none";
       Office.onReady();
     }
   });
@@ -133,7 +278,7 @@ export function SaveToken() {
 //get all practices
 export async function GetAllPratiche(token) {
   var settings = {
-    url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/archive",
+    url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/archive?intestazione=true",
     method: "GET",
     timeout: 0,
     headers: {
@@ -150,6 +295,7 @@ export async function GetAllPratiche(token) {
     totalNumberOfPractices = practices.length;
     practices.slice(indexOfPractice, indexOfPractice + 10).forEach((item) => {
       var Inestazione = "Intestazione pratica";
+      Inestazione = item.intestazione;
       var practiceButton = document.createElement("div");
       practiceButton.setAttribute("id", item.id);
       practiceButton.innerHTML =
@@ -171,9 +317,11 @@ export async function GetAllPratiche(token) {
       var ScegliPratica = document.getElementById("Scegli" + item.id);
       ScegliPratica.onclick = function setChoosenPractice() {
         chosenPractice = item.id;
-
+        data = item.data;
+        codicepratica = item.codicearchivio;
         if (Office.context.mailbox.item.displayReplyForm != undefined) {
-          //--------------------------------------------------------------------------------------------------------------------------------------------> Here here - received mail
+          document.getElementById("ReadMessage").style.display = "";
+          document.getElementById("practicesSection").style.display = "none";
         } else {
           chooseTemplateOrDocuments(); //------------------------------------------------------------------------------------------------------------> Here here - new mail
         }
@@ -462,6 +610,39 @@ export async function addTemplate() {
   return false;
 }
 
+export async function PostDocument(file, NomeFile) {
+  debugger;
+  var paramString =
+    "?file=" +
+    file +
+    "&titolodocumento=" +
+    NomeFile +
+    "&nomefile=" +
+    NomeFile +
+    "&data=" +
+    data +
+    "&codicepratica=" +
+    codicepratica;
+  var settings = {
+    url: "https://howling-crypt-47129.herokuapp.com/https://testenv18.netlex.cloud/api-v2/document" + paramString,
+    method: "POST",
+    timeout: 0,
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  };
+  await $.ajax(settings)
+    .done(function (response) {
+      debugger;
+      var Response = response;
+    })
+    .fail(function (jqXHR, textStatus) {
+      debugger;
+      var test = textStatus;
+      var newtest = jqXHR;
+    });
+}
+
 //documents section
 export async function chooseDocument(id) {
   document.getElementById("chooseTemplateOrDocs").style.display = "none";
@@ -480,6 +661,7 @@ export async function chooseDocument(id) {
     },
   };
   document.getElementById("goBackToTempDocChoiceDoc").onclick = chooseTemplateOrDocuments;
+  document.getElementById("documents").style.display = "none";
   //create tree-view from documentTreeView request
   var elementId;
   document.getElementById("templateChooser").style.display = "none";
@@ -515,6 +697,18 @@ export async function chooseDocument(id) {
       document.getElementById("documents").append(parent);
     });
   });
+  document
+    .querySelectorAll("fluent-tree-view > fluent-tree-item > fluent-tree-item, fluent-tree-view > fluent-tree-item")
+    .forEach((item) => {
+      item.shadowRoot.querySelector("slot").innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" fill="#000000" viewBox="0 0 24 24" width="24px" height="24px"><path d="M 6 2 C 4.9057453 2 4 2.9057453 4 4 L 4 20 C 4 21.094255 4.9057453 22 6 22 L 18 22 C 19.094255 22 20 21.094255 20 20 L 20 8 L 14 2 L 6 2 z M 6 4 L 13 4 L 13 9 L 18 9 L 18 20 L 6 20 L 6 4 z"/></svg>';
+    });
+
+  document.querySelectorAll("fluent-tree-view > fluent-tree-item[id*='node']").forEach((item) => {
+    item.shadowRoot.querySelector("slot").innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="#000000" viewBox="0 0 24 24" width="24px" height="24px"><path d="M 4 4 C 2.9057453 4 2 4.9057453 2 6 L 2 18 C 2 19.094255 2.9057453 20 4 20 L 20 20 C 21.094255 20 22 19.094255 22 18 L 22 8 C 22 6.9057453 21.094255 6 20 6 L 12 6 L 10 4 L 4 4 z M 4 6 L 9.171875 6 L 11.171875 8 L 20 8 L 20 18 L 4 18 L 4 6 z"/></svg>';
+  });
+  document.getElementById("documents").style.display = "";
   document.getElementById("myInput").onkeyup = filter;
   document.getElementById("addDocument").onclick = addDocument;
   return false;
